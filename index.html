@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="ta">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Meditek</title>
+<meta name="theme-color" content="#106b57">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Meditek">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-180.png">
+<style>
+  :root { --g: #106b57; --g2: #0c5646; --y: #ffd640; --bg: #f3f6f5; --fg: #13201c; }
+  * { box-sizing: border-box; margin: 0; }
+  html, body { height: 100%; background: var(--g); color: var(--fg); font-family: system-ui, -apple-system, "Noto Sans Tamil", sans-serif; }
+  #app { position: fixed; inset: 0; width: 100%; height: 100%; border: 0; background: var(--bg); }
+  #setup { min-height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px;
+    padding: max(24px, env(safe-area-inset-top)) max(20px, env(safe-area-inset-right)) max(24px, env(safe-area-inset-bottom)) max(20px, env(safe-area-inset-left)); text-align: center; color: #fff; }
+  #setup img { width: 112px; height: 112px; border-radius: 26px; box-shadow: 0 10px 30px rgba(0,0,0,.25); }
+  h1 { font-size: 26px; } .sub { opacity: .9; font-size: 16px; line-height: 1.5; max-width: 30em; }
+  .btn { display: block; width: 100%; max-width: 360px; padding: 18px 20px; border-radius: 16px; border: 0; font-size: 20px; font-weight: 800; cursor: pointer; }
+  .btn.main { background: var(--y); color: #3a2a00; box-shadow: 0 6px 18px rgba(0,0,0,.2); }
+  .btn.ghost { background: transparent; color: #fff; border: 2px solid rgba(255,255,255,.6); font-size: 16px; padding: 14px; }
+  .card { background: #fff; color: var(--fg); border-radius: 16px; padding: 16px 18px; max-width: 360px; width: 100%; text-align: left; font-size: 16px; line-height: 1.7; }
+  .card b { color: var(--g); } .ok { font-size: 18px; font-weight: 800; }
+  [hidden] { display: none !important; }
+</style>
+</head>
+<body>
+<iframe id="app" hidden allow="geolocation *; camera *; microphone *; clipboard-write *; fullscreen *" title="Meditek"></iframe>
+
+<div id="setup" hidden>
+  <img src="icon-192.png" alt="">
+  <h1>Meditek Healthcare</h1>
+  <p class="sub">பணியாளர் app — ஒருமுறை நிறுவினால் போதும்.<br>பிறகு போனில் உள்ள Meditek ஐகானைத் தட்டித் திறக்கலாம்.</p>
+
+  <button id="install" class="btn main" hidden>📲 Meditek app நிறுவு</button>
+
+  <div id="ios" class="card" hidden>
+    <b>iPhone-ல் நிறுவ (2 படிகள்):</b><br>
+    1. கீழே உள்ள <b>Share ⬆️</b> பட்டனைத் தட்டவும்<br>
+    2. <b>“Add to Home Screen”</b> → <b>Add</b>
+  </div>
+
+  <div id="manual" class="card" hidden>
+    <b>நிறுவ:</b> மேலே வலது மூலையில் உள்ள <b>⋮</b> மெனு → <b>“Install app”</b> அல்லது <b>“Add to Home screen”</b> → <b>Install</b>.
+  </div>
+
+  <div id="done" class="card" hidden><span class="ok">✅ நிறுவப்பட்டது!</span><br>இனி போனின் home screen-ல் உள்ள <b>Meditek</b> ஐகானைத் தட்டித் திறக்கவும்.</div>
+
+  <button id="open" class="btn ghost">இப்போதே திற →</button>
+</div>
+
+<script>
+const APP = 'https://script.google.com/macros/s/AKfycbyWJf6lhkUxUixcjfqT4s23j7CNiM9kUgTJjrlrJkMwnR5_NT3Smvo3fYwP6Myn9c1h5Q/exec';
+const $ = id => document.getElementById(id);
+const standalone = matchMedia('(display-mode: standalone)').matches || navigator.standalone === true || /[?&]app=1/.test(location.search);
+const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
+
+function openApp() { $('setup').hidden = true; const f = $('app'); if (!f.src) f.src = APP; f.hidden = false; }
+
+if (standalone) openApp();
+else {
+  $('setup').hidden = false;
+  let deferred = null;
+  window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); deferred = e; $('install').hidden = false; $('manual').hidden = true; });
+  window.addEventListener('appinstalled', () => { $('install').hidden = true; $('manual').hidden = true; $('done').hidden = false; });
+  $('install').onclick = async () => { if (!deferred) return; deferred.prompt(); const r = await deferred.userChoice; deferred = null; $('install').hidden = true; if (r.outcome === 'accepted') $('done').hidden = false; else $('manual').hidden = false; };
+  if (isIOS) $('ios').hidden = false;
+  else setTimeout(() => { if (!deferred && $('done').hidden) $('manual').hidden = false; }, 2500);
+  $('open').onclick = openApp;
+}
+</script>
+</body>
+</html>
