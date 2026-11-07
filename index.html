@@ -62,7 +62,7 @@ const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
 
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
 
-function openApp() { $('setup').hidden = true; const f = $('app'); if (!f.src) f.src = APP; f.hidden = false; }
+function openApp() { $('setup').hidden = true; location.replace(APP); }   // open the staff app directly (embedding it is blocked on some phones)
 
 if (standalone) openApp();
 else {
