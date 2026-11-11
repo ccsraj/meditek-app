@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="ta">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Meditek Poster</title>
+<meta name="theme-color" content="#106b57">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Oswald:wght@600;700&family=Roboto+Condensed:wght@500;700&display=swap">
+<style>
+  :root { --g: #106b57; --bg: #eef3f1; --fg: #13201c; }
+  * { box-sizing: border-box; margin: 0; }
+  body { background: var(--bg); color: var(--fg); font-family: system-ui, "Noto Sans Tamil", sans-serif;
+    padding: max(14px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) max(20px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left)); }
+  .wrap { max-width: 560px; margin: 0 auto; display: flex; flex-direction: column; gap: 14px; }
+  h1 { font-size: 18px; color: var(--g); }
+  #img { width: 100%; border-radius: 12px; box-shadow: 0 6px 20px rgba(0,0,0,.15); background: #fff; min-height: 200px; }
+  .btn { display: block; width: 100%; padding: 16px; border-radius: 14px; border: 0; font-size: 18px; font-weight: 800; text-align: center; text-decoration: none; cursor: pointer; }
+  .wa { background: #1faa53; color: #fff; }
+  .dl { background: #fff; color: var(--g); border: 2px solid var(--g); }
+  .note { font-size: 14px; line-height: 1.6; background: #fff; border-radius: 12px; padding: 12px 14px; }
+  .note b { color: var(--g); }
+  [hidden] { display: none !important; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1 id="ttl">போஸ்டர் தயாராகிறது…</h1>
+  <img id="img" alt="போஸ்டர்">
+  <button id="share" class="btn wa" hidden>📤 WhatsApp-ல் போஸ்டர் அனுப்பு</button>
+  <a id="dl" class="btn dl" hidden download="meditek-poster.jpg">⬇ போஸ்டரைச் சேமி</a>
+  <div class="note"><b>எப்படி அனுப்புவது:</b> மேலே உள்ள பச்சைப் பட்டனைத் தட்டி <b>WhatsApp</b> தேர்வு செய்யவும். இப்போதுதான் செய்தி அனுப்பிய அந்தக் கடையின் chat <b>மேலே முதலில்</b> இருக்கும் — அதைத் தேர்வு செய்து <b>Send</b>.</div>
+</div>
+<canvas id="cv" width="1264" height="1264" hidden></canvas>
+<script>
+const P = new URLSearchParams(location.search);
+const NAME = (P.get('n') || 'Medical').trim(), TOWN = (P.get('t') || '').trim(), DAY = (P.get('d') || '').trim(), ADDR = (P.get('a') || '').trim();
+const CAT = ['pharmacy', 'clinic', 'hospital', 'dental', 'vet'].includes(P.get('c')) ? P.get('c') : 'pharmacy';
+const UP = NAME.toUpperCase(), O = 'Oswald, "Arial Narrow", sans-serif', R = '"Roboto Condensed", "Arial Narrow", sans-serif';
+// regions [x, y, w, h, text, weight, maxPx, family, color, align]
+const N = '#0b2a5b', TEAL = '#1f8a9a';
+const SPEC = {
+  clinic: [[40, 14, 1184, 158, UP, 700, 140, O, N], [470, 166, 324, 56, TOWN, 700, 46, R, TEAL], [836, 296, 282, 66, DAY, 700, 54, R, '#111'],
+           [172, 236, 352, 122, UP, 700, 52, R, N, 'c', '#f2f4f3'], [86, 646, 368, 34, UP, 700, 28, R, N], [86, 684, 380, 24, ADDR, 500, 17, R, '#222', 'l']],
+  hospital: [[30, 18, 900, 128, UP, 700, 112, O, N], [372, 146, 182, 42, TOWN, 700, 34, R, TEAL], [950, 152, 266, 74, DAY, 700, 56, R, '#111'],
+           [254, 246, 368, 84, UP, 700, 40, R, N], [116, 578, 388, 34, UP, 700, 26, R, N], [116, 614, 396, 26, ADDR, 500, 18, R, '#222', 'l']],
+  dental: [[40, 12, 1184, 112, UP, 700, 100, O, N], [536, 126, 190, 44, TOWN, 700, 36, R, TEAL], [908, 244, 238, 60, DAY, 700, 46, R, '#111'],
+           [232, 204, 400, 92, UP, 700, 44, R, N], [108, 610, 340, 30, UP, 700, 22, R, N], [108, 644, 392, 24, ADDR, 500, 16, R, '#222', 'l']],
+  vet: [[40, 8, 1184, 144, UP, 700, 128, O, N], [536, 154, 200, 48, TOWN, 700, 38, R, TEAL], [924, 254, 268, 64, DAY, 700, 50, R, '#111'],
+           [148, 228, 392, 58, UP, 700, 44, R, N], [126, 658, 392, 38, UP, 700, 26, R, N], [126, 700, 400, 22, ADDR, 500, 16, R, '#222', 'l']],
+  pharmacy: [[60, 12, 1144, 96, UP, 700, 86, O, N], [516, 106, 232, 58, TOWN, 700, 42, R, TEAL], [808, 238, 340, 86, DAY, 700, 68, R, '#111'],
+           [56, 184, 524, 82, UP, 700, 56, O, N], [90, 536, 344, 62, UP, 700, 38, O, N], [90, 604, 370, 28, ADDR, 500, 20, R, '#222', 'l'],
+           [492, 606, 480, 52, "We'd love to serve you!", 700, 34, R, '#fff'],
+           [300, 674, 664, 46, 'Everything your shop needs, under one roof', 700, 32, R, N],
+           [20, 720, 1224, 62, 'Tablets & Capsules   ·   Syrups   ·   Injections & IV Fluids   ·   Surgicals', 700, 30, R, N]]
+};
+function bgOf(ctx, x, y, w, h) {             // average colour of the region's border ring
+  const px = [], add = d => { for (let i = 0; i < d.length; i += 4) px.push([d[i], d[i + 1], d[i + 2]]); };
+  add(ctx.getImageData(x, y, w, 2).data); add(ctx.getImageData(x, y + h - 2, w, 2).data);
+  add(ctx.getImageData(x, y, 2, h).data); add(ctx.getImageData(x + w - 2, y, 2, h).data);
+  const m = [0, 1, 2].map(k => px.map(p => p[k]).sort((a, b) => a - b)[px.length >> 1]);
+  return 'rgb(' + m.join(',') + ')';
+}
+function draw(img) {
+  const cv = document.getElementById('cv'), ctx = cv.getContext('2d'); ctx.drawImage(img, 0, 0, 1264, 1264);
+  const regs = SPEC[CAT], bgs = regs.map(r => bgOf(ctx, r[0], r[1], r[2], r[3]));
+  regs.forEach((r, i) => {
+    const [x, y, w, h, t, wt, max, fam, col, al, fill] = r; ctx.fillStyle = fill || bgs[i]; ctx.fillRect(x, y, w, h);
+    if (!t) return;
+    let sz = max; ctx.font = wt + ' ' + sz + 'px ' + fam;
+    while (ctx.measureText(t).width > w - 16 && sz > 10) { sz--; ctx.font = wt + ' ' + sz + 'px ' + fam; }
+    ctx.fillStyle = col; ctx.textBaseline = 'middle'; ctx.textAlign = al === 'l' ? 'left' : 'center';
+    ctx.fillText(t, al === 'l' ? x + 6 : x + w / 2, y + h / 2 + 1);
+  });
+  cv.toBlob(b => {
+    const url = URL.createObjectURL(b), file = new File([b], 'Meditek-' + NAME.replace(/[^\w]+/g, '-') + '.jpg', { type: 'image/jpeg' });
+    document.getElementById('img').src = url; const dl = document.getElementById('dl'); dl.href = url; dl.download = file.name; dl.hidden = false;
+    document.getElementById('ttl').textContent = NAME + (TOWN ? ' · ' + TOWN : '');
+    const sh = document.getElementById('share');
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      sh.hidden = false; sh.onclick = () => navigator.share({ files: [file] }).catch(() => {});
+    }
+  }, 'image/jpeg', 0.9);
+}
+(document.fonts && document.fonts.load ? Promise.all([document.fonts.load('700 40px Oswald'), document.fonts.load('700 30px "Roboto Condensed"'), document.fonts.load('500 20px "Roboto Condensed"')]) : Promise.resolve())
+  .catch(() => {}).then(() => { const im = new Image(); im.onload = () => draw(im); im.src = 'tpl/' + CAT + '.jpg'; });
+</script>
+</body>
+</html>
