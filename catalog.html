@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="ta">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Meditek Catalogue</title>
+<meta name="theme-color" content="#106b57">
+<meta property="og:title" content="Meditek Healthcare — Product Catalogue">
+<meta property="og:description" content="1,778 பொருட்கள் · கம்பெனி வாரியாக · மூலக்கூறுடன்">
+<meta property="og:image" content="catalog-cover.jpg">
+<link rel="icon" href="icon-192.png">
+<style>
+  :root { --g: #106b57; --g2: #0c5646; --bg: #f3f6f5; --fg: #13201c; --mut: #5b6a64; --card: #fff; --line: #dfe7e3; }
+  * { box-sizing: border-box; margin: 0; }
+  body { min-height: 100vh; background: var(--bg); color: var(--fg); font-family: system-ui, -apple-system, "Noto Sans Tamil", sans-serif;
+    padding: max(20px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) max(24px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left)); }
+  .wrap { max-width: 440px; margin: 0 auto; display: flex; flex-direction: column; gap: 16px; }
+  .brand { color: var(--g); font-weight: 800; font-size: 15px; letter-spacing: .02em; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 18px; padding: 18px; display: flex; gap: 16px; align-items: center; }
+  .card img { width: 96px; height: auto; border-radius: 8px; box-shadow: 0 6px 18px rgba(16,107,87,.18); flex: none; }
+  h1 { font-size: 19px; line-height: 1.3; } .meta { color: var(--mut); font-size: 14px; margin-top: 6px; line-height: 1.5; }
+  .to { font-size: 15px; color: var(--mut); } .to b { color: var(--fg); }
+  .btn { display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; border: 0; border-radius: 14px; padding: 16px; font: inherit; font-size: 18px; font-weight: 800; cursor: pointer; text-decoration: none; }
+  .wa { background: #1f9d55; color: #fff; } .wa[disabled] { opacity: .55; }
+  .dl { background: var(--card); color: var(--g); border: 1.5px solid var(--g); font-size: 16px; }
+  .steps { color: var(--mut); font-size: 14px; line-height: 1.7; } .msg { color: var(--mut); font-size: 14px; text-align: center; min-height: 1.4em; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="brand">MEDITEK HEALTHCARE · SIVAKASI</div>
+  <div class="card">
+    <img src="catalog-cover.jpg" alt="Catalogue cover">
+    <div><h1>Product Catalogue</h1><div class="meta">1,778 பொருட்கள் · கம்பெனி வாரியாக · மூலக்கூறுடன்<br>PDF · 4.5 MB</div></div>
+  </div>
+  <div class="to" id="to" hidden></div>
+  <button class="btn wa" id="share" disabled>⏳ தயாராகிறது…</button>
+  <a class="btn dl" id="dl" href="catalog.pdf" download="Meditek-Healthcare-Catalogue.pdf">⬇ PDF டவுன்லோட்</a>
+  <div class="msg" id="msg"></div>
+  <div class="steps">"WhatsApp-இல் அனுப்பு" அழுத்தி → WhatsApp → கடையைத் தேர்ந்தெடுங்கள். Catalog ஒரு PDF கோப்பாகப் போகும்; லிங்க் எதுவும் தெரியாது.</div>
+</div>
+<script>
+const NAME = "Meditek-Healthcare-Catalogue.pdf", $ = id => document.getElementById(id), btn = $("share"), msg = $("msg");
+const shop = new URLSearchParams(location.search).get("n");
+if (shop) { $("to").hidden = false; $("to").innerHTML = "அனுப்ப வேண்டியது: <b></b>"; $("to").querySelector("b").textContent = shop; }
+let file = null;
+const canShareFiles = f => { try { return !!(navigator.canShare && navigator.canShare({ files: [f] })); } catch (e) { return false; } };
+/* the PDF is fetched first, so the tap goes straight to the share sheet (a share must follow the tap immediately) */
+fetch("catalog.pdf").then(r => { if (!r.ok) throw 0; return r.blob(); }).then(b => {
+  file = new File([b], NAME, { type: "application/pdf" });
+  if (canShareFiles(file)) { btn.disabled = false; btn.textContent = "📤 WhatsApp-இல் அனுப்பு"; }
+  else { btn.hidden = true; msg.textContent = "இந்தக் கருவியில் நேரடிப் பகிர்வு இல்லை. PDF-ஐ டவுன்லோட் செய்து WhatsApp-இல் இணைக்கவும்."; }
+}).catch(() => { btn.hidden = true; msg.textContent = "Catalog ஏற்ற முடியவில்லை. இணையத்தைச் சரிபார்த்து மீண்டும் திறக்கவும்."; });
+btn.onclick = () => {
+  if (!file) return;
+  navigator.share({ files: [file], title: "Meditek Healthcare — Product Catalogue" })
+    .then(() => { msg.textContent = "✅ அனுப்பப்பட்டது"; })
+    .catch(e => { if (!e || e.name !== "AbortError") msg.textContent = "பகிர முடியவில்லை. கீழே உள்ள டவுன்லோட் பட்டனைப் பயன்படுத்தவும்."; });
+};
+</script>
+</body>
+</html>
