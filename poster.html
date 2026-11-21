@@ -41,19 +41,53 @@ const UP = NAME.toUpperCase(), O = 'Oswald, "Arial Narrow", sans-serif', R = '"R
 const N = '#0b2a5b', TEAL = '#1f8a9a';
 const SPEC = {
   clinic: [[40, 14, 1184, 158, UP, 700, 140, O, N], [470, 166, 324, 56, TOWN, 700, 46, R, TEAL], [836, 296, 282, 66, DAY, 700, 54, R, '#111'],
-           [172, 236, 352, 122, UP, 700, 52, R, N, 'c', '#f2f4f3'], [86, 646, 368, 34, UP, 700, 28, R, N], [86, 684, 380, 24, ADDR, 500, 17, R, '#222', 'l']],
+           [86, 646, 368, 34, UP, 700, 28, R, N], [86, 684, 380, 24, ADDR, 500, 17, R, '#222', 'l']],
   hospital: [[30, 18, 900, 128, UP, 700, 112, O, N], [372, 146, 182, 42, TOWN, 700, 34, R, TEAL], [950, 152, 266, 74, DAY, 700, 56, R, '#111'],
-           [254, 246, 368, 84, UP, 700, 40, R, N], [116, 578, 388, 34, UP, 700, 26, R, N], [116, 614, 396, 26, ADDR, 500, 18, R, '#222', 'l']],
+           [116, 578, 388, 34, UP, 700, 26, R, N], [116, 614, 396, 26, ADDR, 500, 18, R, '#222', 'l']],
   dental: [[40, 12, 1184, 112, UP, 700, 100, O, N], [536, 126, 190, 44, TOWN, 700, 36, R, TEAL], [908, 244, 238, 60, DAY, 700, 46, R, '#111'],
-           [232, 204, 400, 92, UP, 700, 44, R, N], [108, 610, 340, 30, UP, 700, 22, R, N], [108, 644, 392, 24, ADDR, 500, 16, R, '#222', 'l']],
+           [108, 610, 340, 30, UP, 700, 22, R, N], [108, 644, 392, 24, ADDR, 500, 16, R, '#222', 'l']],
   vet: [[40, 8, 1184, 144, UP, 700, 128, O, N], [536, 154, 200, 48, TOWN, 700, 38, R, TEAL], [924, 254, 268, 64, DAY, 700, 50, R, '#111'],
-           [148, 228, 392, 58, UP, 700, 44, R, N], [126, 658, 392, 38, UP, 700, 26, R, N], [126, 700, 400, 22, ADDR, 500, 16, R, '#222', 'l']],
+           [126, 658, 392, 38, UP, 700, 26, R, N], [126, 700, 400, 22, ADDR, 500, 16, R, '#222', 'l']],
   pharmacy: [[60, 12, 1144, 96, UP, 700, 86, O, N], [516, 106, 232, 58, TOWN, 700, 42, R, TEAL], [808, 238, 340, 86, DAY, 700, 68, R, '#111'],
-           [56, 184, 524, 82, UP, 700, 56, O, N], [90, 536, 344, 62, UP, 700, 38, O, N], [90, 604, 370, 28, ADDR, 500, 20, R, '#222', 'l'],
+           [90, 536, 344, 62, UP, 700, 38, O, N], [90, 604, 370, 28, ADDR, 500, 20, R, '#222', 'l'],
            [492, 606, 480, 52, "We'd love to serve you!", 700, 34, R, '#fff'],
            [300, 674, 664, 46, 'Everything your shop needs, under one roof', 700, 32, R, N],
            [20, 720, 1224, 62, 'Tablets & Capsules   ·   Syrups   ·   Injections & IV Fluids   ·   Surgicals', 700, 30, R, N]]
 };
+// storefront signboard (the template photo's board is blank): [x0, y0, x1, y1, face colour, side colour, 2nd-line colour]
+const SIGN = {
+  clinic:   [176, 236, 512, 362, '#0b2a5b', '#061a3a', '#0f7a4f'],
+  pharmacy: [52, 190, 556, 256, '#0b2a5b', '#061a3a', ''],
+  hospital: [250, 240, 640, 335, '#0b2a5b', '#061a3a', '#0f7a4f'],
+  dental:   [240, 190, 616, 302, '#0b2a5b', '#061a3a', '#1f8a9a'],
+  vet:      [142, 226, 540, 316, '#0e6b47', '#07402a', '#0e6b47']
+};
+/* letters made like a real shop board: raised acrylic letters with depth, a soft shadow on the board,
+   a light-from-above face, the board's own lighting over them, and the photo's grain and softness */
+function sign(ctx) {
+  const [x0, y0, x1, y1, face, side, c2] = SIGN[CAT], w = x1 - x0, h = y1 - y0, two = !!(c2 && TOWN);
+  const L = document.createElement('canvas'); L.width = w; L.height = h; const g = L.getContext('2d');
+  const fit = (t, fam, wt, maxH, maxW) => { let s = maxH; g.font = wt + ' ' + s + 'px ' + fam; while (g.measureText(t).width > maxW && s > 10) { s--; g.font = wt + ' ' + s + 'px ' + fam; } return s; };
+  const raised = (t, cy, s, fam, wt, col, dk) => {
+    g.font = wt + ' ' + s + 'px ' + fam; g.textAlign = 'center'; g.textBaseline = 'middle';
+    const d = Math.max(2, Math.round(s / 16)), cx = w / 2;
+    g.save(); g.shadowColor = 'rgba(0,0,0,.38)'; g.shadowBlur = s / 7; g.shadowOffsetX = d * 1.2; g.shadowOffsetY = d * 1.9; g.fillStyle = dk; g.fillText(t, cx + d, cy + d); g.restore();
+    for (let i = d; i > 0; i--) { g.fillStyle = dk; g.fillText(t, cx + i * 0.8, cy + i * 0.9); }
+    g.globalAlpha = .55; g.fillStyle = '#fff'; g.fillText(t, cx - 0.8, cy - 0.8); g.globalAlpha = 1;
+    const gr = g.createLinearGradient(0, cy - s / 2, 0, cy + s / 2); gr.addColorStop(0, col); gr.addColorStop(1, dk); 
+    g.fillStyle = col; g.fillText(t, cx, cy); g.globalAlpha = .35; g.fillStyle = gr; g.fillText(t, cx, cy); g.globalAlpha = 1;
+  };
+  const padX = w * 0.04, s1 = fit(UP, O, 700, two ? h * 0.52 : h * 0.72, w - 2 * padX);
+  if (two) { const s2 = fit(TOWN, R, 700, h * 0.24, w * 0.7); raised(UP, h * 0.37, s1, O, 700, face, side); raised(TOWN, h * 0.79, s2, R, 700, c2, side); }
+  else raised(UP, h * 0.52, s1, O, 700, face, side);
+  // the board's lighting falls on the letters too (brighter at the top, a little darker at the bottom)
+  g.globalCompositeOperation = 'source-atop';
+  const lt = g.createLinearGradient(0, 0, 0, h); lt.addColorStop(0, 'rgba(255,255,255,.10)'); lt.addColorStop(1, 'rgba(0,0,0,.12)'); g.fillStyle = lt; g.fillRect(0, 0, w, h);
+  // the photo's grain
+  const id = g.getImageData(0, 0, w, h), p = id.data; for (let i = 0; i < p.length; i += 4) if (p[i + 3]) { const n = (Math.random() - .5) * 14; p[i] += n; p[i + 1] += n; p[i + 2] += n; }
+  g.putImageData(id, 0, 0); g.globalCompositeOperation = 'source-over';
+  ctx.save(); ctx.filter = 'blur(0.45px)'; ctx.drawImage(L, x0, y0); ctx.restore();
+}
 function bgOf(ctx, x, y, w, h) {             // average colour of the region's border ring
   const px = [], add = d => { for (let i = 0; i < d.length; i += 4) px.push([d[i], d[i + 1], d[i + 2]]); };
   add(ctx.getImageData(x, y, w, 2).data); add(ctx.getImageData(x, y + h - 2, w, 2).data);
@@ -63,6 +97,7 @@ function bgOf(ctx, x, y, w, h) {             // average colour of the region's b
 }
 function draw(img) {
   const cv = document.getElementById('cv'), ctx = cv.getContext('2d'); ctx.drawImage(img, 0, 0, 1264, 1264);
+  sign(ctx);
   const regs = SPEC[CAT], bgs = regs.map(r => bgOf(ctx, r[0], r[1], r[2], r[3]));
   regs.forEach((r, i) => {
     const [x, y, w, h, t, wt, max, fam, col, al, fill] = r; ctx.fillStyle = fill || bgs[i]; ctx.fillRect(x, y, w, h);
@@ -83,7 +118,7 @@ function draw(img) {
   }, 'image/jpeg', 0.9);
 }
 (document.fonts && document.fonts.load ? Promise.all([document.fonts.load('700 40px Oswald'), document.fonts.load('700 30px "Roboto Condensed"'), document.fonts.load('500 20px "Roboto Condensed"')]) : Promise.resolve())
-  .catch(() => {}).then(() => { const im = new Image(); im.onload = () => draw(im); im.src = 'tpl/' + CAT + '.jpg'; });
+  .catch(() => {}).then(() => { const im = new Image(); im.onload = () => draw(im); im.src = 'tpl/' + CAT + '.jpg?v=2'; });
 </script>
 </body>
 </html>
