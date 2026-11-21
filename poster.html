@@ -6,7 +6,7 @@
 <title>Meditek Poster</title>
 <meta name="theme-color" content="#106b57">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Oswald:wght@600;700&family=Roboto+Condensed:wght@500;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Oswald:wght@600;700&family=Roboto+Condensed:wght@500;700&family=Noto+Sans+Tamil:wght@700;800&display=swap">
 <style>
   :root { --g: #106b57; --bg: #eef3f1; --fg: #13201c; }
   * { box-sizing: border-box; margin: 0; }
@@ -51,8 +51,7 @@ const SPEC = {
   pharmacy: [[60, 12, 1144, 96, UP, 700, 86, O, N], [516, 106, 232, 58, TOWN, 700, 42, R, TEAL], [808, 238, 340, 86, DAY, 700, 68, R, '#111'],
            [90, 536, 344, 62, UP, 700, 38, O, N], [90, 604, 370, 28, ADDR, 500, 20, R, '#222', 'l'],
            [492, 606, 480, 52, "We'd love to serve you!", 700, 34, R, '#fff'],
-           [300, 674, 664, 46, 'Everything your shop needs, under one roof', 700, 32, R, N],
-           [20, 720, 1224, 62, 'Tablets & Capsules   ·   Syrups   ·   Injections & IV Fluids   ·   Surgicals', 700, 30, R, N]]
+]
 };
 // storefront signboard (the template photo's board is blank): [x0, y0, x1, y1, face colour, side colour, 2nd-line colour]
 const SIGN = {
@@ -88,6 +87,35 @@ function sign(ctx) {
   g.putImageData(id, 0, 0); g.globalCompositeOperation = 'source-over';
   ctx.save(); ctx.filter = 'blur(0.45px)'; ctx.drawImage(L, x0, y0); ctx.restore();
 }
+// Tamil promise panel: replaces the template's chip row (it repeated the product tiles) — [x0, y0, x1, y1]
+const PANEL = { clinic: [34, 734, 1230, 848], pharmacy: [34, 660, 1230, 782], hospital: [34, 664, 1230, 789], dental: [20, 696, 1244, 818], vet: [20, 744, 1244, 848] };
+// sticky note: the small handwriting becomes a bold, readable Tamil note — [centre x, centre y, width, height, tilt°, note colour]
+const NOTE = { clinic: [782, 492, 182, 208, -9, '#fded9e'], pharmacy: [802, 460, 212, 212, -5.5, '#fbef79'], hospital: [843, 335, 189, 196, -3.7, '#fbf18f'],
+               dental: [785, 417, 212, 212, -5.8, '#fdf394'], vet: [792, 471, 201, 278, -3, '#fde774', 0.07] };
+const TA = "'Noto Sans Tamil', 'Latha', sans-serif";
+const WD_TA = { Monday: 'திங்கள்கிழமை', Tuesday: 'செவ்வாய்க்கிழமை', Wednesday: 'புதன்கிழமை', Thursday: 'வியாழக்கிழமை', Friday: 'வெள்ளிக்கிழமை', Saturday: 'சனிக்கிழமை' };
+function fitFont(ctx, t, fam, wt, maxPx, maxW) { let z = maxPx; ctx.font = wt + ' ' + z + 'px ' + fam; while (ctx.measureText(t).width > maxW && z > 10) { z--; ctx.font = wt + ' ' + z + 'px ' + fam; } return z; }
+function panel(ctx) {
+  const [x0, y0, x1, y1] = PANEL[CAT], w = x1 - x0, h = y1 - y0, cx = x0 + w / 2;
+  ctx.fillStyle = '#fefefe'; ctx.fillRect(x0, y0, w, h);   // the template's panel is plain white
+  const day = WD_TA[DAY], l1 = day ? 'ஒவ்வொரு ' + day + 'யும் உங்கள் பகுதிக்கு வருகிறோம்' : 'வாரந்தோறும் உங்கள் பகுதிக்கு வருகிறோம்';
+  const l2 = 'தேவையான பொருட்களை WhatsApp-இல் ஆர்டர் செய்யுங்கள் · சரியான நேரத்தில் டெலிவரி';
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  fitFont(ctx, l1, TA, 800, h * 0.36, w * 0.92); ctx.fillStyle = N; ctx.fillText(l1, cx, y0 + h * 0.36);
+  fitFont(ctx, l2, TA, 700, h * 0.22, w * 0.92); ctx.fillStyle = TEAL; ctx.fillText(l2, cx, y0 + h * 0.76);
+}
+function note(ctx) {
+  const [cx, cy, w, h, deg, col, tp = 0.14] = NOTE[CAT], iw = w * 0.94, ih = h * (0.96 - tp), oy = h * (tp - 0.04) / 2;   // tp: top part kept for the pin
+  ctx.save(); ctx.translate(cx, cy + oy); ctx.rotate(deg * Math.PI / 180);
+  ctx.fillStyle = col; ctx.filter = 'blur(5px)'; ctx.fillRect(-iw / 2, -ih / 2, iw, ih); ctx.filter = 'none';   // clear the old handwriting with soft edges (the pin at the top stays)
+  ctx.fillRect(-iw / 2 + 6, -ih / 2 + 6, iw - 12, ih - 12);
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillStyle = '#0b2a5b';
+  const a = 'சிறந்த விலை!', b = 'உங்கள் தேவையை', c = 'சொல்லுங்கள்';
+  fitFont(ctx, a, TA, 800, ih * 0.22, iw * 0.9); ctx.fillStyle = '#c62828'; ctx.fillText(a, 0, -ih * 0.2);
+  ctx.fillStyle = '#0b2a5b'; const z = Math.min(fitFont(ctx, b, TA, 700, ih * 0.16, iw * 0.9), fitFont(ctx, c, TA, 700, ih * 0.16, iw * 0.9));
+  ctx.font = '700 ' + z + 'px ' + TA; ctx.fillText(b, 0, ih * 0.08); ctx.fillText(c, 0, ih * 0.28);
+  ctx.restore();
+}
 function bgOf(ctx, x, y, w, h) {             // average colour of the region's border ring
   const px = [], add = d => { for (let i = 0; i < d.length; i += 4) px.push([d[i], d[i + 1], d[i + 2]]); };
   add(ctx.getImageData(x, y, w, 2).data); add(ctx.getImageData(x, y + h - 2, w, 2).data);
@@ -97,7 +125,7 @@ function bgOf(ctx, x, y, w, h) {             // average colour of the region's b
 }
 function draw(img) {
   const cv = document.getElementById('cv'), ctx = cv.getContext('2d'); ctx.drawImage(img, 0, 0, 1264, 1264);
-  sign(ctx);
+  sign(ctx); panel(ctx); note(ctx);
   const regs = SPEC[CAT], bgs = regs.map(r => bgOf(ctx, r[0], r[1], r[2], r[3]));
   regs.forEach((r, i) => {
     const [x, y, w, h, t, wt, max, fam, col, al, fill] = r; ctx.fillStyle = fill || bgs[i]; ctx.fillRect(x, y, w, h);
@@ -117,7 +145,7 @@ function draw(img) {
     }
   }, 'image/jpeg', 0.9);
 }
-(document.fonts && document.fonts.load ? Promise.all([document.fonts.load('700 40px Oswald'), document.fonts.load('700 30px "Roboto Condensed"'), document.fonts.load('500 20px "Roboto Condensed"')]) : Promise.resolve())
+(document.fonts && document.fonts.load ? Promise.all([document.fonts.load('700 40px Oswald'), document.fonts.load('700 30px "Roboto Condensed"'), document.fonts.load('500 20px "Roboto Condensed"'), document.fonts.load("800 30px 'Noto Sans Tamil'"), document.fonts.load("700 30px 'Noto Sans Tamil'")]) : Promise.resolve())
   .catch(() => {}).then(() => { const im = new Image(); im.onload = () => draw(im); im.src = 'tpl/' + CAT + '.jpg?v=2'; });
 </script>
 </body>
