@@ -34,7 +34,10 @@
 <canvas id="cv" width="1264" height="1264" hidden></canvas>
 <script>
 const P = new URLSearchParams(location.search);
-const NAME = (P.get('n') || 'Medical').trim(), TOWN = (P.get('t') || '').trim(), DAY = (P.get('d') || '').trim(), ADDR = (P.get('a') || '').trim();
+const NAME = (P.get('n') || 'Medical').trim(), TOWN = (P.get('t') || '').trim(), DAY = (P.get('d') || '').trim();
+// one spelling of the town everywhere: a word in the address that is the same town spelt differently (Thiruvengadam / Thiruvenkadam) takes the heading's spelling
+const townKey = t => String(t || '').toLowerCase().replace(/[^a-z]/g, '').replace(/h/g, '').replace(/[aeiouy]/g, '').replace(/g/g, 'k').replace(/d/g, 't').replace(/b/g, 'p').replace(/w/g, 'v').replace(/(.)\1+/g, '$1');
+const ADDR = (P.get('a') || '').trim().replace(/[A-Za-z]+/g, w => TOWN && w.length > 3 && townKey(w) === townKey(TOWN) ? TOWN : w);
 const CAT = ['pharmacy', 'clinic', 'hospital', 'dental', 'vet'].includes(P.get('c')) ? P.get('c') : 'pharmacy';
 const UP = NAME.toUpperCase(), O = 'Oswald, "Arial Narrow", sans-serif', R = '"Roboto Condensed", "Arial Narrow", sans-serif';
 // regions [x, y, w, h, text, weight, maxPx, family, color, align]
@@ -111,9 +114,9 @@ function note(ctx) {
   ctx.fillRect(-iw / 2 + 6, -ih / 2 + 6, iw - 12, ih - 12);
   ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillStyle = '#0b2a5b';
   const a = 'சிறந்த விலை!', b = 'உங்கள் தேவையை', c = 'சொல்லுங்கள்';
-  fitFont(ctx, a, TA, 800, ih * 0.22, iw * 0.9); ctx.fillStyle = '#c62828'; ctx.fillText(a, 0, -ih * 0.2);
-  ctx.fillStyle = '#0b2a5b'; const z = Math.min(fitFont(ctx, b, TA, 700, ih * 0.16, iw * 0.9), fitFont(ctx, c, TA, 700, ih * 0.16, iw * 0.9));
-  ctx.font = '700 ' + z + 'px ' + TA; ctx.fillText(b, 0, ih * 0.08); ctx.fillText(c, 0, ih * 0.28);
+  fitFont(ctx, a, TA, 800, ih * 0.3, iw * 0.94); ctx.fillStyle = '#c62828'; ctx.fillText(a, 0, -ih * 0.22);
+  ctx.fillStyle = '#0b2a5b'; const z = Math.min(fitFont(ctx, b, TA, 700, ih * 0.21, iw * 0.94), fitFont(ctx, c, TA, 700, ih * 0.21, iw * 0.94));
+  ctx.font = '700 ' + z + 'px ' + TA; ctx.fillText(b, 0, ih * 0.1); ctx.fillText(c, 0, ih * 0.33);
   ctx.restore();
 }
 function bgOf(ctx, x, y, w, h) {             // average colour of the region's border ring
