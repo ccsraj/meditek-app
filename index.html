@@ -62,7 +62,25 @@ const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
 
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
 
-function openApp() { $('setup').hidden = true; location.replace(APP); }   // open the staff app directly (embedding it is blocked on some phones)
+// Open the staff app inside this full-screen app (no browser bar, no Google banner).
+// If this phone blocks embedding (page never reports in, or its first server call fails), remember that and open it directly instead.
+function store(k, v) { try { v === undefined ? localStorage.removeItem(k) : localStorage.setItem(k, v); } catch (e) {} }
+function read(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
+function direct() { store('mdk_embed', 'bad'); location.replace(APP); }
+function openApp() {
+  $('setup').hidden = true;
+  if (read('mdk_embed') === 'bad' && !/[?&]embed=1/.test(location.search)) return location.replace(APP);
+  const f = $('app'); let seen = false, ok = false;
+  window.addEventListener('message', e => {
+    if (!/\.googleusercontent\.com$/.test(new URL(e.origin).hostname) || !e.data || !e.data.meditek) return;
+    const m = e.data.meditek;
+    if (m === 'loaded') seen = true;
+    else if (m === 'ok') { ok = true; store('mdk_embed', 'good'); }
+    else if (m === 'fail' && !ok) direct();
+  });
+  setTimeout(() => { if (!seen) direct(); }, 25000);
+  f.src = APP; f.hidden = false;
+}
 
 if (standalone) openApp();
 else {
